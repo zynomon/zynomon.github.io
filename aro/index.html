@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aro</title>
+<style>
+@font-face {
+    font-family: 'Aro';
+    src: url('https://raw.githubusercontent.com/zynomon/aro/main/aro.ttf') format('truetype');
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Aro', monospace;
+}
+body {
+    background: #000;
+    color: #fff;
+}
+#error {
+    display: none;
+    color: red;
+    padding: 50px;
+    border: 2px solid red;
+}
+#content {
+    display: none;
+    padding: 20px;
+}
+h1 {
+    font-size: 80px;
+    animation: g 2s infinite;
+}
+@keyframes g {
+    0% { transform: translate(0); }
+    25% { transform: translate(-2px, 2px); }
+    50% { transform: translate(2px, -2px); }
+    75% { transform: translate(-2px, -2px); }
+}
+#glyphs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 5px;
+    margin: 30px 0;
+    border: 1px solid #333;
+    padding: 10px;
+}
+.g {
+    text-align: center;
+    font-size: 24px;
+    border: 1px solid #222;
+    cursor: pointer;
+}
+.g:hover {
+    background: #222;
+}
+#releases {
+    margin: 30px 0;
+    border: 1px solid #333;
+    padding: 20px;
+}
+.tags {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.tag {
+    padding: 5px 10px;
+    border: 1px solid #444;
+    cursor: pointer;
+    background: #111;
+}
+.tag.active {
+    background: #333;
+    border-color: #666;
+}
+.assets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.asset {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #222;
+    background: #0a0a0a;
+}
+.btn {
+    padding: 5px 10px;
+    background: #222;
+    border: 1px solid #444;
+    cursor: pointer;
+}
+#text-display {
+    margin: 30px 0;
+    font-size: 16px;
+    line-height: 1.6;
+    border-left: 2px solid #333;
+    padding-left: 15px;
+}
+</style>
+</head>
+<body>
+<div id="error">ERROR: Aro font not loaded</div>
+<div id="content">
+<h1>ARO</h1>
+<div id="text-display"></div>
+<div id="glyphs"></div>
+<div id="releases">
+<div class="tags" id="tags"></div>
+<div class="assets" id="assets"></div>
+</div>
+</div>
+<script type="module">
+import { prepare, layout } from 'https://esm.sh/@chenglou/pretext';
+const FONT_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/aro.ttf';
+const API = 'https://api.github.com/repos/zynomon/aro/releases';
+let releases = [];
+let selected = null;
+async function loadFont() {
+try {
+const r = await fetch(FONT_URL);
+if (!r.ok) throw new Error();
+const d = await r.arrayBuffer();
+if (d.byteLength === 0) throw new Error();
+return true;
+} catch(e) {
+return false;
+}
+}
+async function waitFont() {
+return new Promise(r => document.fonts.ready.then(() => setTimeout(r, 300)));
+}
+async function getReleases() {
+try {
+const r = await fetch(API);
+if (!r.ok) return;
+releases = await r.json();
+if (releases.length) selected = releases[0];
+} catch(e) {}
+}
+function showGlyphs() {
+const c = document.getElementById('glyphs');
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:\'",.<>?/~`';
+for (let i = 0; i < chars.length; i++) {
+const d = document.createElement('div');
+d.className = 'g';
+d.textContent = chars[i];
+c.appendChild(d);
+}
+}
+function showTags() {
+const c = document.getElementById('tags');
+releases.forEach((rel, i) => {
+const t = document.createElement('div');
+t.className = 'tag' + (i === 0 ? ' active' : '');
+t.textContent = rel.tag_name;
+t.onclick = () => selectRel(i);
+c.appendChild(t);
+});
+showAssets();
+}
+function selectRel(i) {
+selected = releases[i];
+document.querySelectorAll('.tag').forEach((t, j) => t.classList.toggle('active', j === i));
+showAssets();
+}
+function showAssets() {
+const c = document.getElementById('assets');
+c.innerHTML = '';
+if (!selected || !selected.assets) return;
+selected.assets.forEach(a => {
+const d = document.createElement('div');
+d.className = 'asset';
+d.innerHTML = '<span>' + a.name + '</span><span>' + a.download_count + ' <button class="btn" onclick="window.open(\'' + a.browser_download_url + '\')">DL</button></span>';
+c.appendChild(d);
+});
+}
+function animText() {
+const txt = 'Chaotic typeface system';
+const el = document.getElementById('text-display');
+const p = prepare(txt, '16px "Aro"');
+const { height } = layout(p, 600, 24);
+el.style.minHeight = height + 'px';
+let i = 0;
+const int = setInterval(() => {
+if (i <= txt.length) {
+el.textContent = txt.substring(0, i);
+i++;
+} else clearInterval(int);
+}, 40);
+}
+async function init() {
+const ok = await loadFont();
+if (!ok) {
+document.getElementById('error').style.display = 'block';
+return;
+}
+await waitFont();
+await getReleases();
+document.getElementById('content').style.display = 'block';
+showGlyphs();
+showTags();
+animText();
+}
+init();
+</script>
+</body>
+</html>
