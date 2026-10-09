@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Aro</title>
+<link id="favicon" rel="icon" type="image/svg+xml">
 <style>
 @font-face {
     font-family: 'Aro';
-    src: url('https://raw.githubusercontent.com/zynomon/aro/main/aro.ttf') format('truetype');
+    src: url('./aro.ttf') format('truetype');
+    font-display: swap;
 }
 * {
     margin: 0;
@@ -30,13 +32,7 @@ body {
 }
 h1 {
     font-size: 80px;
-    animation: g 2s infinite;
-}
-@keyframes g {
-    0% { transform: translate(0); }
-    25% { transform: translate(-2px, 2px); }
-    50% { transform: translate(2px, -2px); }
-    75% { transform: translate(-2px, -2px); }
+    pointer-events: none;
 }
 #glyphs {
     display: grid;
@@ -93,21 +89,21 @@ h1 {
     background: #222;
     border: 1px solid #444;
     cursor: pointer;
+    pointer-events: auto;
+    text-decoration: none;
+    color: #fff;
+    display: inline-block;
 }
-#text-display {
-    margin: 30px 0;
-    font-size: 16px;
-    line-height: 1.6;
-    border-left: 2px solid #333;
-    padding-left: 15px;
+.char {
+    display: inline-block;
+    transition: transform 0.2s;
 }
 </style>
 </head>
 <body>
 <div id="error">ERROR: Aro font not loaded</div>
 <div id="content">
-<h1>ARO</h1>
-<div id="text-display"></div>
+<h1>Aro.</h1>
 <div id="glyphs"></div>
 <div id="releases">
 <div class="tags" id="tags"></div>
@@ -116,23 +112,30 @@ h1 {
 </div>
 <script type="module">
 import { prepare, layout } from 'https://esm.sh/@chenglou/pretext';
-const FONT_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/aro.ttf';
+const SVG_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/src/en/U%2B0041_A.svg';
 const API = 'https://api.github.com/repos/zynomon/aro/releases';
 let releases = [];
 let selected = null;
-async function loadFont() {
+let mouseX = -1000;
+let mouseY = -1000;
+async function checkFont() {
 try {
-const r = await fetch(FONT_URL);
-if (!r.ok) throw new Error();
-const d = await r.arrayBuffer();
-if (d.byteLength === 0) throw new Error();
+await document.fonts.load('16px "Aro"');
 return true;
 } catch(e) {
 return false;
 }
 }
-async function waitFont() {
-return new Promise(r => document.fonts.ready.then(() => setTimeout(r, 300)));
+async function loadFavicon() {
+try {
+const r = await fetch(SVG_URL);
+if (!r.ok) return;
+let svg = await r.text();
+svg = svg.replace('<svg', '<svg style="background:white"');
+const blob = new Blob([svg], { type: 'image/svg+xml' });
+const url = URL.createObjectURL(blob);
+document.getElementById('favicon').href = url;
+} catch(e) {}
 }
 async function getReleases() {
 try {
@@ -147,7 +150,7 @@ const c = document.getElementById('glyphs');
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:\'",.<>?/~`';
 for (let i = 0; i < chars.length; i++) {
 const d = document.createElement('div');
-d.className = 'g';
+d.className = 'g char';
 d.textContent = chars[i];
 c.appendChild(d);
 }
@@ -156,7 +159,7 @@ function showTags() {
 const c = document.getElementById('tags');
 releases.forEach((rel, i) => {
 const t = document.createElement('div');
-t.className = 'tag' + (i === 0 ? ' active' : '');
+t.className = 'tag char';
 t.textContent = rel.tag_name;
 t.onclick = () => selectRel(i);
 c.appendChild(t);
@@ -168,6 +171,11 @@ selected = releases[i];
 document.querySelectorAll('.tag').forEach((t, j) => t.classList.toggle('active', j === i));
 showAssets();
 }
+function formatSize(bytes) {
+if (bytes < 1024) return bytes + ' B';
+if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+return (bytes / 1048576).toFixed(1) + ' MB';
+}
 function showAssets() {
 const c = document.getElementById('assets');
 c.innerHTML = '';
@@ -175,36 +183,60 @@ if (!selected || !selected.assets) return;
 selected.assets.forEach(a => {
 const d = document.createElement('div');
 d.className = 'asset';
-d.innerHTML = '<span>' + a.name + '</span><span>' + a.download_count + ' <button class="btn" onclick="window.open(\'' + a.browser_download_url + '\')">DL</button></span>';
+const nameSpan = document.createElement('span');
+nameSpan.className = 'char';
+nameSpan.textContent = a.name;
+const metaSpan = document.createElement('span');
+metaSpan.className = 'char';
+metaSpan.textContent = a.download_count + ' | ' + formatSize(a.size) + ' ';
+const btn = document.createElement('a');
+btn.className = 'btn char';
+btn.href = a.browser_download_url;
+btn.target = '_blank';
+btn.textContent = '\u2193';
+metaSpan.appendChild(btn);
+d.appendChild(nameSpan);
+d.appendChild(metaSpan);
 c.appendChild(d);
 });
 }
-function animText() {
-const txt = 'Chaotic typeface system';
-const el = document.getElementById('text-display');
-const p = prepare(txt, '16px "Aro"');
-const { height } = layout(p, 600, 24);
-el.style.minHeight = height + 'px';
-let i = 0;
-const int = setInterval(() => {
-if (i <= txt.length) {
-el.textContent = txt.substring(0, i);
-i++;
-} else clearInterval(int);
-}, 40);
+function initMouseRepel() {
+document.addEventListener('mousemove', (e) => {
+mouseX = e.clientX;
+mouseY = e.clientY;
+});
+setInterval(() => {
+const chars = document.querySelectorAll('.char');
+chars.forEach(char => {
+if (char.tagName === 'A') return;
+const rect = char.getBoundingClientRect();
+const cx = rect.left + rect.width / 2;
+const cy = rect.top + rect.height / 2;
+const dist = Math.sqrt(Math.pow(mouseX - cx, 2) + Math.pow(mouseY - cy, 2));
+if (dist < 60) {
+const angle = Math.atan2(cy - mouseY, cx - mouseX);
+const force = (60 - dist) * 0.5;
+const tx = Math.cos(angle) * force;
+const ty = Math.sin(angle) * force;
+char.style.transform = `translate(${tx}px, ${ty}px)`;
+} else {
+char.style.transform = 'translate(0, 0)';
+}
+});
+}, 16);
 }
 async function init() {
-const ok = await loadFont();
+const ok = await checkFont();
 if (!ok) {
 document.getElementById('error').style.display = 'block';
 return;
 }
-await waitFont();
+await loadFavicon();
 await getReleases();
 document.getElementById('content').style.display = 'block';
 showGlyphs();
 showTags();
-animText();
+initMouseRepel();
 }
 init();
 </script>
