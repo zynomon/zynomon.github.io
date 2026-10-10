@@ -20,7 +20,7 @@
 <meta name="twitter:title" content="Aro, a chaotic font">
 <meta name="twitter:description" content="English letters and symbols, drawn to be unusable in professional places.">
 <meta name="twitter:image" content="https://zynomon.github.io/aro/og.png">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%27162%20149%20640%20640%27%3E%3Crect%20x=%27162%27%20y=%27149%27%20width=%27640%27%20height=%27640%27%20fill=%27%23fff%27/%3E%3Cpath%20fill=%27%23000%27%20fill-rule=%27evenodd%27%20d=%27M%20512.82031%20182.90625%20L%20476.92383%20193.16211%20L%20215.38477%20755.55469%20L%20398.29102%20755.55469%20L%20341.88086%20700.85547%20L%20393.16211%20579.48633%20L%20555.55469%20576.06836%20L%20593.16211%20694.01758%20L%20548.71875%20753.8457%20L%20748.71875%20748.71875%20L%20502.56445%20196.58203%20L%20512.82031%20182.90625%20z%20M%20475.21289%20297.43555%20L%20547.00781%20500.85547%20L%20401.70898%20497.43555%20L%20475.21289%20297.43555%20z%27/%3E%3C/svg%3E">
+<link id="favicon" rel="icon" type="image/svg+xml">
 <style>
 @font-face { font-family: 'Aro'; src: url('./aro.ttf') format('truetype'); font-display: swap; }
 :root { --ink: #fff; --haze: #a8a8a8; --flare: #ffd23f; }
@@ -137,6 +137,7 @@ async function loadPretext() {
     }
 }
 const REPO = 'zynomon/aro';
+const SVG_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/src/en/U%2B0041_A.svg';
 const CMDS = ['git clone https://github.com/zynomon/aro.git', 'cd aro', 'bash build'];
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const INTRO_MS = 1000;
@@ -410,6 +411,29 @@ function showReleases() {
     });
 }
 
+async function loadFavicon() {
+    try {
+        const r = await fetch(SVG_URL);
+        if (!r.ok) return;
+        const doc = new DOMParser().parseFromString(await r.text(), 'image/svg+xml');
+        const d = [...doc.querySelectorAll('path')].map(p => p.getAttribute('d')).filter(Boolean).join(' ');
+        if (!d) return;
+        const ns = 'http://www.w3.org/2000/svg';
+        const probe = document.createElementNS(ns, 'svg');
+        probe.setAttribute('style', 'position:absolute;width:0;height:0;visibility:hidden');
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', d);
+        probe.appendChild(path);
+        document.body.appendChild(probe);
+        const b = path.getBBox();
+        probe.remove();
+        const m = Math.max(b.width, b.height) * 1.25;
+        const x = b.x + b.width / 2 - m / 2, y = b.y + b.height / 2 - m / 2;
+        const out = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${x} ${y} ${m} ${m}'><rect x='${x}' y='${y}' width='${m}' height='${m}' fill='#000'/><path fill='#fff' fill-rule='evenodd' d='${d}'/></svg>`;
+        document.getElementById('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(out);
+    } catch (e) {}
+}
+
 async function init() {
     try { await document.fonts.load('32px "Aro"'); } catch (e) {}
     const ok = [...document.fonts].some(f => f.family.replace(/["']/g, '') === 'Aro' && f.status === 'loaded');
@@ -481,6 +505,7 @@ async function init() {
         setTimeout(chaos, INTRO_MS + 500);
     }
 
+    loadFavicon();
     try {
         const r = await fetch(`https://api.github.com/repos/${REPO}/releases`);
         if (r.ok) releases = await r.json();
