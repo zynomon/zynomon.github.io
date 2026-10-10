@@ -1,242 +1,488 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aro</title>
+<meta name="description" content="Aro is a chaotic font: English letters and symbols, built from one SVG per glyph.">
 <link id="favicon" rel="icon" type="image/svg+xml">
 <style>
-@font-face {
-    font-family: 'Aro';
-    src: url('./aro.ttf') format('truetype');
-    font-display: swap;
-}
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Aro', monospace;
-}
-body {
-    background: #000;
-    color: #fff;
-}
-#error {
-    display: none;
-    color: red;
-    padding: 50px;
-    border: 2px solid red;
-}
-#content {
-    display: none;
-    padding: 20px;
-}
-h1 {
-    font-size: 80px;
-    pointer-events: none;
-}
-#glyphs {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 5px;
-    margin: 30px 0;
-    border: 1px solid #333;
-    padding: 10px;
-}
-.g {
-    text-align: center;
-    font-size: 24px;
-    border: 1px solid #222;
-    cursor: pointer;
-}
-.g:hover {
-    background: #222;
-}
-#releases {
-    margin: 30px 0;
-    border: 1px solid #333;
-    padding: 20px;
-}
-.tags {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-.tag {
-    padding: 5px 10px;
-    border: 1px solid #444;
-    cursor: pointer;
-    background: #111;
-}
-.tag.active {
-    background: #333;
-    border-color: #666;
-}
-.assets {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.asset {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border: 1px solid #222;
-    background: #0a0a0a;
-}
-.btn {
-    padding: 5px 10px;
-    background: #222;
-    border: 1px solid #444;
-    cursor: pointer;
-    pointer-events: auto;
-    text-decoration: none;
-    color: #fff;
-    display: inline-block;
-}
-.char {
-    display: inline-block;
-    transition: transform 0.2s;
-}
+@font-face { font-family: 'Aro'; src: url('./aro.ttf') format('truetype'); font-display: swap; }
+:root { --ink: #fff; --haze: #a8a8a8; --flare: #ffd23f; }
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+html, body { background: #000; }
+body { color: var(--ink); font-family: 'Aro', ui-monospace, monospace; line-height: 1.4; overflow-x: hidden; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--flare); outline-offset: 3px; }
+
+
+.w { display: inline-block; white-space: nowrap; }
+.c { display: inline-block; cursor: grab; user-select: none; -webkit-user-select: none; }
+body.dragging, body.dragging * { cursor: grabbing !important; }
+a, button { -webkit-user-drag: none; }
+.ln { white-space: nowrap; min-height: 1em; }
+
+#notice { display: none; background: var(--flare); color: #000; padding: 12px 20px; font-family: ui-monospace, monospace; font-size: 14px; }
+main { max-width: 1200px; margin: 0 auto; padding: clamp(16px, 4vw, 48px); }
+
+.hero h1 { font-size: clamp(140px, 34vw, 440px); line-height: .8; font-weight: normal; padding-top: .06em; margin-bottom: clamp(20px, 4vw, 48px); }
+.lede { font-size: clamp(24px, 4.2vw, 52px); line-height: 1.12; max-width: 18em; }
+
+section { border-top: 2px solid var(--ink); margin-top: clamp(48px, 8vw, 96px); padding-top: 24px; }
+h2 { font-size: clamp(28px, 4vw, 44px); font-weight: normal; line-height: 1.1; margin-bottom: 12px; }
+.note { color: var(--haze); max-width: 60ch; margin-bottom: 24px; font-size: 18px; }
+
+#tester { width: 100%; background: transparent; color: var(--ink); border: 2px solid var(--ink); font-family: sans-serif; font-size: 22px; padding: 12px 14px; user-select: text; -webkit-user-select: text; border-radius: 0; }
+#tester::placeholder { color: var(--haze); }
+#out { font-size: clamp(44px, 9vw, 128px); line-height: 1.02; min-height: 1.1em; margin-top: 28px; overflow-wrap: anywhere; }
+
+#glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); border-left: 2px solid var(--ink); border-top: 2px solid var(--ink); }
+.g { aspect-ratio: 1; display: grid; place-items: center; background: transparent; color: var(--ink); font: inherit; font-size: 34px; border: 0; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink); cursor: pointer; }
+.g:hover, .g:focus-visible { background: var(--ink); color: #000; outline-offset: -6px; }
+
+.cmds { border: 2px solid var(--ink); padding: 14px 18px; margin-bottom: 16px; width: fit-content; max-width: 100%; overflow-x: auto; }
+.cmds code { display: block; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 19px; line-height: 1.7; white-space: nowrap; }
+
+.btn { display: inline-block; padding: 8px 16px; background: transparent; color: var(--ink); border: 2px solid var(--ink); font: inherit; font-size: 18px; text-decoration: none; cursor: pointer; }
+.btn:hover { background: var(--ink); color: #000; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.tag { background: transparent; color: var(--ink); border: 2px solid var(--ink); font: inherit; font-size: 20px; padding: 4px 14px; cursor: pointer; }
+.tag[aria-pressed="true"] { background: var(--ink); color: #000; }
+.when { color: var(--haze); margin-bottom: 16px; }
+.asset { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 2px solid var(--ink); }
+.asset:last-child { border-bottom: 2px solid var(--ink); }
+.asset .meta { display: flex; align-items: center; gap: 16px; color: var(--haze); }
+.empty { color: var(--haze); font-size: 18px; margin-bottom: 14px; }
+footer { margin: 80px 0 16px; color: var(--haze); font-size: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+
+@media (prefers-reduced-motion: reduce) { .c { transform: none !important; opacity: 1 !important; } }
 </style>
 </head>
 <body>
-<div id="error">ERROR: Aro font not loaded</div>
-<div id="content">
-<h1>Aro.</h1>
-<div id="glyphs"></div>
-<div id="releases">
-<div class="tags" id="tags"></div>
-<div class="assets" id="assets"></div>
-</div>
-</div>
+<div id="notice">aro.ttf was not found next to this page, so Aro is not loading. Put aro.ttf in the same folder as this file.</div>
+<main>
+    <header class="hero">
+        <h1 id="title"></h1>
+        <p class="lede" data-text="A chaotic font. English letters and symbols, drawn to be unusable in professional places."></p>
+    </header>
+
+    <section>
+        <h2 data-text="Try it"></h2>
+        <p class="note" data-text="Type anything. Respectability not included."></p>
+        <input id="tester" type="text" value="Per my last email." placeholder="Type something respectable" maxlength="60" autocomplete="off" spellcheck="false" aria-label="Text to preview in Aro">
+        <div id="out" aria-live="polite"></div>
+    </section>
+
+    <section>
+        <h2 data-text="Glyphs"></h2>
+        <p class="note" data-text="Every character is its own SVG file. Click a glyph to add it to the tester. You can also grab any letter on this page, throw it, and watch it come back."></p>
+        <div id="glyphs"></div>
+    </section>
+
+    <section>
+        <h2 data-text="Build it yourself"></h2>
+        <p class="note" data-text="Install FontForge and a unix-like terminal (Git Bash works). Then clone the project and build it:"></p>
+        <div class="cmds" id="cmds"></div>
+        <button class="btn" id="copy" type="button"></button>
+        <p class="note" style="margin-top:24px" data-text="Aro is Apache 2.0. Build it, hack it, redistribute it."></p>
+    </section>
+
+    <section>
+        <h2 data-text="Releases"></h2>
+        <div class="tags" id="tags"></div>
+        <div class="when" id="when"></div>
+        <div id="assets"></div>
+    </section>
+
+    <footer>
+        <span id="by"></span>
+        <a class="btn" id="gh" href="https://github.com/zynomon/aro"></a>
+    </footer>
+</main>
+
 <script type="module">
-import { prepare, layout } from 'https://esm.sh/@chenglou/pretext';
+let prepareWithSegments = null, layoutWithLines = null;
+async function loadPretext() {
+    const urls = [
+        'https://esm.sh/@chenglou/pretext@0.0.9',
+        'https://esm.sh/@chenglou/pretext',
+        'https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.9/dist/layout.js'
+    ];
+    for (const u of urls) {
+        try {
+            const m = await import(u);
+            if (m.prepareWithSegments && m.layoutWithLines) {
+                prepareWithSegments = m.prepareWithSegments;
+                layoutWithLines = m.layoutWithLines;
+                return;
+            }
+        } catch (e) {}
+    }
+}
+const REPO = 'zynomon/aro';
 const SVG_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/src/en/U%2B0041_A.svg';
-const API = 'https://api.github.com/repos/zynomon/aro/releases';
-let releases = [];
-let selected = null;
-let mouseX = -1000;
-let mouseY = -1000;
-async function checkFont() {
-try {
-await document.fonts.load('16px "Aro"');
-return true;
-} catch(e) {
-return false;
+const CMDS = ['git clone https://github.com/zynomon/aro.git', 'cd aro', 'bash build'];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const INTRO_MS = 1000;
+
+let chars = [], introMode = false;
+const active = new Set(), intros = new Set();
+let releases = [], selected = 0;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const sign = () => (Math.random() < .5 ? -1 : 1);
+const tf = o => `translate(${o.x}px,${o.y}px) rotate(${o.r}deg) scale(${1 + o.s})`;
+
+
+function reg(el) {
+    const o = { el, x: 0, y: 0, r: 0, s: 0, vx: 0, vy: 0, vr: 0, vs: 0, cx: 0, cy: 0, intro: false };
+    if (introMode) {
+        const a = rnd(0, 6.283), d = rnd(180, 720);
+        o.ix = Math.cos(a) * d; o.iy = Math.sin(a) * d; o.ir = rnd(-220, 220); o.is = rnd(-.7, 1.2);
+        o.x = o.ix; o.y = o.iy; o.r = o.ir; o.s = o.is; o.t0 = null; o.intro = true;
+        el.style.transform = tf(o); el.style.opacity = 0;
+        intros.add(o);
+    }
+    el._o = o;
+    chars.push(o);
+    return o;
 }
+
+function charify(el, text) {
+    chars = chars.filter(o => !el.contains(o.el));
+    el.textContent = '';
+    text.split(/(\s+)/).forEach(tok => {
+        if (!tok) return;
+        if (/^\s+$/.test(tok)) { el.appendChild(document.createTextNode(' ')); return; }
+        const w = document.createElement('span');
+        w.className = 'w';
+        for (const ch of tok) {
+            const c = document.createElement('span');
+            c.className = 'c';
+            c.textContent = ch;
+            w.appendChild(c);
+            reg(c);
+        }
+        el.appendChild(w);
+    });
 }
-async function loadFavicon() {
-try {
-const r = await fetch(SVG_URL);
-if (!r.ok) return;
-let svg = await r.text();
-svg = svg.replace('<svg', '<svg style="background:white"');
-const blob = new Blob([svg], { type: 'image/svg+xml' });
-const url = URL.createObjectURL(blob);
-document.getElementById('favicon').href = url;
-} catch(e) {}
+
+
+function setLines(el) {
+    const text = el.dataset.text;
+    chars = chars.filter(o => !el.contains(o.el));
+    el.textContent = '';
+    const cs = getComputedStyle(el);
+    const size = parseFloat(cs.fontSize);
+    const lh = parseFloat(cs.lineHeight) || size * 1.2;
+    let lines = null;
+    try {
+        const p = prepareWithSegments(text, `${size}px Aro`);
+        lines = layoutWithLines(p, el.clientWidth, lh).lines.map(l => l.text.trimEnd());
+    } catch (e) {}
+    if (!lines) { charify(el, text); return; }
+    lines.forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'ln';
+        charify(d, t);
+        el.appendChild(d);
+    });
 }
-async function getReleases() {
-try {
-const r = await fetch(API);
-if (!r.ok) return;
-releases = await r.json();
-if (releases.length) selected = releases[0];
-} catch(e) {}
+const relayout = () => { document.querySelectorAll('[data-text]').forEach(setLines); measure(); };
+
+function measure() {
+    chars = chars.filter(o => o.el.isConnected);
+    const sx = scrollX, sy = scrollY;
+    for (const o of chars) {
+        const r = o.el.getBoundingClientRect();
+        o.fixed = false;
+        o.h = r.height / 2;
+        o.cx = r.left + r.width / 2 + (o.fixed ? 0 : sx) - o.x;
+        o.cy = r.top + r.height / 2 + (o.fixed ? 0 : sy) - o.y;
+    }
 }
+let mt;
+const measureSoon = () => { clearTimeout(mt); mt = setTimeout(measure, 80); };
+
+
+const MOVES = [
+    o => { o.vy = -rnd(10, 24); },
+    o => { o.vr = sign() * rnd(14, 34); o.vy = -rnd(2, 8); },
+    o => { o.vx = rnd(-16, 16); o.vy = rnd(-16, 16); o.vr = rnd(-14, 14); },
+    o => { o.vs = rnd(.35, .9); },
+    o => { o.vx = sign() * rnd(8, 20); o.vr = sign() * rnd(4, 12); }
+];
+function kick(o, move) {
+    if (!o || o.intro || o.dragging || o.fall) return;
+    (move || MOVES[(Math.random() * MOVES.length) | 0])(o);
+    const p = power();
+    o.vx *= p; o.vy *= p; o.vr *= p; o.vs *= p;
+    active.add(o);
+}
+
+const K = 0.1, DAMP = 0.86;
+let last = performance.now(), mx = -9999, my = -9999, cmx = -9999, cmy = -9999, moved = false;
+let level = 1, lastSY = 0, falling = false, fallUntil = 0, fallDir = 1, fallPush = 0;
+const FALL_SPEED = 55, FALL_MIN_MS = 350, FALL_MAX_MS = 1200, G = 0.9;
+const power = () => 1.67;
+
+function tick(now) {
+    const dt = Math.min(2.5, (now - last) / 16.67);
+    last = now;
+
+    for (const o of intros) {
+        if (!o.el.isConnected) { intros.delete(o); continue; }
+        if (o.t0 === null) o.t0 = now;
+        const t = Math.min(1, (now - o.t0) / INTRO_MS);
+        const k = Math.pow(1 - t, 3);
+        o.x = o.ix * k; o.y = o.iy * k; o.r = o.ir * k; o.s = o.is * k;
+        if (t >= 1) {
+            o.x = o.y = o.r = o.s = 0; o.intro = false;
+            o.el.style.transform = ''; o.el.style.opacity = '';
+            intros.delete(o);
+        } else {
+            o.el.style.transform = tf(o);
+            o.el.style.opacity = Math.min(1, t * 3);
+        }
+    }
+
+    const pw = power();
+    if (moved) {
+        moved = false;
+        if (pw > 0) for (const o of chars) {
+            if (o.intro || o.dragging) continue;
+            const dx = o.cx + (o.fall ? o.x : 0) - mx, dy = o.cy + (o.fall ? o.y : 0) - my, d = Math.hypot(dx, dy);
+            if (d < 70 && d > 0.1) {
+                const f = (70 - d) / 70 * 3 * pw;
+                o.vx += dx / d * f; o.vy += dy / d * f;
+                active.add(o);
+            }
+        }
+    }
+
+    const sy = scrollY, dS = sy - lastSY;
+    lastSY = sy;
+    const spd = Math.abs(dS) / dt;
+    if (spd > FALL_SPEED) {
+        const push = Math.min(1, (spd - FALL_SPEED) / 80);
+        falling = true;
+        fallUntil = Math.max(fallUntil, now + FALL_MIN_MS + push * (FALL_MAX_MS - FALL_MIN_MS));
+        fallDir = dS > 0 ? 1 : -1;
+        fallPush = Math.max(fallPush, push);
+    }
+    if (falling) {
+        if (now < fallUntil) {
+            for (const o of chars) {
+                if (o.fall || o.intro || o.cy < sy - 40 || o.cy > sy + innerHeight + 40) continue;
+                o.fall = true; o.vx = rnd(-4, 4); o.vy = fallDir * rnd(2, 10) * (0.4 + fallPush); o.vr = rnd(-12, 12); o.fl = rnd(0, 70);
+                active.add(o);
+            }
+        } else {
+            falling = false; fallPush = 0;
+            for (const o of chars) if (o.fall) { o.fall = false; active.add(o); }
+        }
+    }
+    const damp = Math.pow(DAMP, dt);
+    for (const o of active) {
+        if (o.dragging) continue;
+        if (o.fall) {
+            o.y += dS;
+            o.vy += G * fallDir * (0.7 + fallPush * 1.3) * dt;
+            o.vx *= Math.pow(0.99, dt);
+            o.x += o.vx * dt; o.y += o.vy * dt; o.r += o.vr * dt;
+            const maxY = sy + innerHeight - o.fl - o.h - o.cy;
+            const minY = sy + o.fl + o.h - o.cy;
+            const hit = o.y > maxY ? maxY : o.y < minY ? minY : null;
+            if (hit !== null) { o.y = hit; o.vy *= -0.45; o.vx *= 0.8; o.vr *= 0.6; if (Math.abs(o.vy) < 1.5) o.vy = 0; }
+            const px = o.cx + o.x;
+            if (px < 12) { o.x = 12 - o.cx; o.vx = Math.abs(o.vx) * 0.5; }
+            else if (px > innerWidth - 12) { o.x = innerWidth - 12 - o.cx; o.vx = -Math.abs(o.vx) * 0.5; }
+            o.el.style.transform = tf(o);
+            continue;
+        }
+        o.vx -= K * o.x * dt; o.vy -= K * o.y * dt; o.vr -= K * o.r * dt; o.vs -= K * o.s * dt;
+        o.vx *= damp; o.vy *= damp; o.vr *= damp; o.vs *= damp;
+        o.x += o.vx * dt; o.y += o.vy * dt; o.r += o.vr * dt; o.s += o.vs * dt;
+        const e = Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.r) + Math.abs(o.s * 10) +
+                  Math.abs(o.vx) + Math.abs(o.vy) + Math.abs(o.vr) + Math.abs(o.vs * 10);
+        if (e < 0.05) {
+            o.x = o.y = o.r = o.s = o.vx = o.vy = o.vr = o.vs = 0;
+            o.el.style.transform = '';
+            active.delete(o);
+        } else o.el.style.transform = tf(o);
+    }
+    requestAnimationFrame(tick);
+}
+
+function visibleChar() {
+    for (let i = 0; i < 12; i++) {
+        const o = chars[(Math.random() * chars.length) | 0];
+        if (o && !o.intro && (o.fixed || (o.cy > scrollY - 40 && o.cy < scrollY + innerHeight + 40))) return o;
+    }
+    return null;
+}
+function chaos() {
+    const o = level > 0 ? visibleChar() : null;
+    if (o) {
+        if (Math.random() < .22) {
+            const i = chars.indexOf(o), move = MOVES[(Math.random() * MOVES.length) | 0];
+            const n = 6 + ((Math.random() * 10) | 0);
+            for (let k = 0; k < n; k++) setTimeout(() => kick(chars[i + k], move), k * 45);
+        } else kick(o);
+    }
+    setTimeout(chaos, level > 0 ? rnd(120, 420) / Math.max(power(), 0.15) : 400);
+}
+
+
 function showGlyphs() {
-const c = document.getElementById('glyphs');
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:\'",.<>?/~`';
-for (let i = 0; i < chars.length; i++) {
-const d = document.createElement('div');
-d.className = 'g char';
-d.textContent = chars[i];
-c.appendChild(d);
+    const box = document.getElementById('glyphs');
+    const set = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:\'",.<>?/~`';
+    for (const ch of set) {
+        const b = document.createElement('button');
+        b.className = 'g'; b.type = 'button';
+        b.setAttribute('aria-label', 'Add ' + ch + ' to the tester');
+        const s = document.createElement('span');
+        s.className = 'c'; s.textContent = ch;
+        b.appendChild(s);
+        const o = reg(s);
+        b.onclick = () => {
+            if (!RM) { o.vy = -22; o.vr = sign() * 30; o.vs = .6; active.add(o); }
+            const t = document.getElementById('tester');
+            if (t.value.length < t.maxLength) { t.value += ch; renderTester(); }
+        };
+        box.appendChild(b);
+    }
 }
+
+function renderTester() {
+    charify(document.getElementById('out'), document.getElementById('tester').value);
+    measureSoon();
 }
-function showTags() {
-const c = document.getElementById('tags');
-releases.forEach((rel, i) => {
-const t = document.createElement('div');
-t.className = 'tag char';
-t.textContent = rel.tag_name;
-t.onclick = () => selectRel(i);
-c.appendChild(t);
-});
-showAssets();
+
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) charify(e, text); return e; };
+
+function showReleases() {
+    const tags = document.getElementById('tags'), when = document.getElementById('when'), list = document.getElementById('assets');
+    chars = chars.filter(o => !tags.contains(o.el) && !when.contains(o.el) && !list.contains(o.el));
+    tags.innerHTML = ''; list.innerHTML = ''; when.textContent = '';
+    if (!releases.length) {
+        list.append(el('p', 'empty', 'Could not load releases from the GitHub API. It may be rate limiting.'));
+        const a = el('a', 'btn', 'Open releases on GitHub');
+        a.href = `https://github.com/${REPO}/releases`;
+        list.append(a);
+        return;
+    }
+    releases.forEach((rel, i) => {
+        const t = el('button', 'tag');
+        t.type = 'button';
+        t.setAttribute('aria-pressed', i === selected);
+        charify(t, rel.tag_name);
+        t.onclick = () => { selected = i; showReleases(); measureSoon(); };
+        tags.appendChild(t);
+    });
+    const rel = releases[selected];
+    charify(when, 'Published ' + new Date(rel.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
+    if (!rel.assets.length) { list.append(el('p', 'empty', 'This release has no files attached.')); return; }
+    rel.assets.forEach(a => {
+        const row = el('div', 'asset');
+        const meta = el('span', 'meta');
+        const get = el('a', 'btn', 'Download');
+        get.href = a.browser_download_url; get.target = '_blank'; get.rel = 'noopener';
+        meta.append(el('span', '', a.download_count + ' downloads, ' + fmtSize(a.size)), get);
+        row.append(el('span', '', a.name), meta);
+        list.appendChild(row);
+    });
 }
-function selectRel(i) {
-selected = releases[i];
-document.querySelectorAll('.tag').forEach((t, j) => t.classList.toggle('active', j === i));
-showAssets();
+
+async function loadFavicon() {
+    try {
+        const r = await fetch(SVG_URL);
+        if (!r.ok) return;
+        const svg = (await r.text()).replace('<svg', '<svg style="background:white"');
+        document.getElementById('favicon').href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    } catch (e) {}
 }
-function formatSize(bytes) {
-if (bytes < 1024) return bytes + ' B';
-if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-return (bytes / 1048576).toFixed(1) + ' MB';
-}
-function showAssets() {
-const c = document.getElementById('assets');
-c.innerHTML = '';
-if (!selected || !selected.assets) return;
-selected.assets.forEach(a => {
-const d = document.createElement('div');
-d.className = 'asset';
-const nameSpan = document.createElement('span');
-nameSpan.className = 'char';
-nameSpan.textContent = a.name;
-const metaSpan = document.createElement('span');
-metaSpan.className = 'char';
-metaSpan.textContent = a.download_count + ' | ' + formatSize(a.size) + ' ';
-const btn = document.createElement('a');
-btn.className = 'btn char';
-btn.href = a.browser_download_url;
-btn.target = '_blank';
-btn.textContent = '\u2193';
-metaSpan.appendChild(btn);
-d.appendChild(nameSpan);
-d.appendChild(metaSpan);
-c.appendChild(d);
-});
-}
-function initMouseRepel() {
-document.addEventListener('mousemove', (e) => {
-mouseX = e.clientX;
-mouseY = e.clientY;
-});
-setInterval(() => {
-const chars = document.querySelectorAll('.char');
-chars.forEach(char => {
-if (char.tagName === 'A') return;
-const rect = char.getBoundingClientRect();
-const cx = rect.left + rect.width / 2;
-const cy = rect.top + rect.height / 2;
-const dist = Math.sqrt(Math.pow(mouseX - cx, 2) + Math.pow(mouseY - cy, 2));
-if (dist < 60) {
-const angle = Math.atan2(cy - mouseY, cx - mouseX);
-const force = (60 - dist) * 0.5;
-const tx = Math.cos(angle) * force;
-const ty = Math.sin(angle) * force;
-char.style.transform = `translate(${tx}px, ${ty}px)`;
-} else {
-char.style.transform = 'translate(0, 0)';
-}
-});
-}, 16);
-}
+
 async function init() {
-const ok = await checkFont();
-if (!ok) {
-document.getElementById('error').style.display = 'block';
-return;
-}
-await loadFavicon();
-await getReleases();
-document.getElementById('content').style.display = 'block';
-showGlyphs();
-showTags();
-initMouseRepel();
+    try { await document.fonts.load('32px "Aro"'); } catch (e) {}
+    const ok = [...document.fonts].some(f => f.family.replace(/["']/g, '') === 'Aro' && f.status === 'loaded');
+    if (!ok) document.getElementById('notice').style.display = 'block';
+    await loadPretext();
+
+    introMode = !RM;
+    if (introMode) document.documentElement.style.overflow = 'hidden';
+
+    charify(document.getElementById('title'), 'Aro.');
+    showGlyphs();
+    const cmds = document.getElementById('cmds');
+    CMDS.forEach(c => cmds.appendChild(el('code', '', c)));
+    const copy = document.getElementById('copy');
+    charify(copy, 'Copy commands');
+    copy.onclick = async () => {
+        let msg = 'Copied';
+        try { await navigator.clipboard.writeText(CMDS.join('\n')); } catch (e) { msg = 'Copy failed'; }
+        charify(copy, msg); measureSoon();
+        setTimeout(() => { charify(copy, 'Copy commands'); measureSoon(); }, 1500);
+    };
+    charify(document.getElementById('by'), 'Aro by zynomon.');
+    charify(document.getElementById('gh'), 'Source on GitHub');
+    document.getElementById('tester').addEventListener('input', renderTester);
+    renderTester();
+    relayout();
+
+    if (!RM) {
+        let drag = null, dragMoved = false;
+        addEventListener('pointerdown', e => {
+            if (e.button !== 0) return;
+            const c = e.target.closest && e.target.closest('.c'), o = c && c._o;
+            if (!o || o.intro) return;
+            drag = { o, px: e.clientX, py: e.clientY, ox: o.x, oy: o.y, lx: e.clientX, ly: e.clientY, vx: 0, vy: 0 };
+            dragMoved = false;
+            o.dragging = true; o.vx = o.vy = o.vr = o.vs = 0;
+            active.add(o);
+        });
+        addEventListener('pointermove', e => {
+            mx = e.clientX + scrollX; my = e.clientY + scrollY; cmx = e.clientX; cmy = e.clientY; moved = true;
+            if (!drag) return;
+            const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+            if (!dragMoved && Math.hypot(dx, dy) > 4) { dragMoved = true; document.body.classList.add('dragging'); }
+            if (!dragMoved) return;
+            const o = drag.o;
+            drag.vx = e.clientX - drag.lx; drag.vy = e.clientY - drag.ly;
+            drag.lx = e.clientX; drag.ly = e.clientY;
+            o.x = drag.ox + dx; o.y = drag.oy + dy;
+            o.r = Math.max(-45, Math.min(45, drag.vx * 3));
+            o.el.style.transform = tf(o);
+        });
+        const drop = () => {
+            if (!drag) return;
+            const o = drag.o;
+            o.dragging = false;
+            if (dragMoved) { o.vx = drag.vx * 1.2; o.vy = drag.vy * 1.2; }
+            drag = null;
+            document.body.classList.remove('dragging');
+            setTimeout(() => { dragMoved = false; }, 50);
+        };
+        addEventListener('pointerup', drop);
+        addEventListener('pointercancel', drop);
+        addEventListener('click', e => { if (dragMoved) { e.stopPropagation(); e.preventDefault(); } }, true);
+        addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('a,button')) e.preventDefault(); });
+        let rt;
+        addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(relayout, 150); });
+        requestAnimationFrame(tick);
+        setTimeout(() => { document.documentElement.style.overflow = ''; }, INTRO_MS + 300);
+        setTimeout(chaos, INTRO_MS + 500);
+    }
+
+    loadFavicon();
+    try {
+        const r = await fetch(`https://api.github.com/repos/${REPO}/releases`);
+        if (r.ok) releases = await r.json();
+    } catch (e) {}
+    showReleases();
+    introMode = false;
+    measure();
 }
 init();
 </script>
