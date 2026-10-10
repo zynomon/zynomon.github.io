@@ -3,9 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aro</title>
-<meta name="description" content="Aro is a chaotic font: English letters and symbols, built from one SVG per glyph.">
-<link id="favicon" rel="icon" type="image/svg+xml">
+<title>Aro, a chaotic font</title>
+<meta name="description" content="Aro is a chaotic font: English letters and symbols, built from one SVG per glyph. Free and open source under Apache 2.0.">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="https://zynomon.github.io/aro/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Aro">
+<meta property="og:title" content="Aro, a chaotic font">
+<meta property="og:description" content="English letters and symbols, drawn to be unusable in professional places.">
+<meta property="og:url" content="https://zynomon.github.io/aro/">
+<meta property="og:image" content="https://zynomon.github.io/aro/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The word Aro set in the Aro font">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aro, a chaotic font">
+<meta name="twitter:description" content="English letters and symbols, drawn to be unusable in professional places.">
+<meta name="twitter:image" content="https://zynomon.github.io/aro/og.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%27162%20149%20640%20640%27%3E%3Crect%20x=%27162%27%20y=%27149%27%20width=%27640%27%20height=%27640%27%20fill=%27%23fff%27/%3E%3Cpath%20fill=%27%23000%27%20fill-rule=%27evenodd%27%20d=%27M%20512.82031%20182.90625%20L%20476.92383%20193.16211%20L%20215.38477%20755.55469%20L%20398.29102%20755.55469%20L%20341.88086%20700.85547%20L%20393.16211%20579.48633%20L%20555.55469%20576.06836%20L%20593.16211%20694.01758%20L%20548.71875%20753.8457%20L%20748.71875%20748.71875%20L%20502.56445%20196.58203%20L%20512.82031%20182.90625%20z%20M%20475.21289%20297.43555%20L%20547.00781%20500.85547%20L%20401.70898%20497.43555%20L%20475.21289%20297.43555%20z%27/%3E%3C/svg%3E">
 <style>
 @font-face { font-family: 'Aro'; src: url('./aro.ttf') format('truetype'); font-display: swap; }
 :root { --ink: #fff; --haze: #a8a8a8; --flare: #ffd23f; }
@@ -62,6 +77,7 @@ footer { margin: 80px 0 16px; color: var(--haze); font-size: 16px; display: flex
 <body>
 <div id="notice">aro.ttf was not found next to this page, so Aro is not loading. Put aro.ttf in the same folder as this file.</div>
 <main>
+    <noscript><h1>Aro</h1><p>A chaotic font. English letters and symbols, drawn to be unusable in professional places. Free and open source under Apache 2.0. Source and downloads: https://github.com/zynomon/aro</p></noscript>
     <header class="hero">
         <h1 id="title"></h1>
         <p class="lede" data-text="A chaotic font. English letters and symbols, drawn to be unusable in professional places."></p>
@@ -121,7 +137,6 @@ async function loadPretext() {
     }
 }
 const REPO = 'zynomon/aro';
-const SVG_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/src/en/U%2B0041_A.svg';
 const CMDS = ['git clone https://github.com/zynomon/aro.git', 'cd aro', 'bash build'];
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const INTRO_MS = 1000;
@@ -395,15 +410,6 @@ function showReleases() {
     });
 }
 
-async function loadFavicon() {
-    try {
-        const r = await fetch(SVG_URL);
-        if (!r.ok) return;
-        const svg = (await r.text()).replace('<svg', '<svg style="background:white"');
-        document.getElementById('favicon').href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-    } catch (e) {}
-}
-
 async function init() {
     try { await document.fonts.load('32px "Aro"'); } catch (e) {}
     const ok = [...document.fonts].some(f => f.family.replace(/["']/g, '') === 'Aro' && f.status === 'loaded');
@@ -475,7 +481,6 @@ async function init() {
         setTimeout(chaos, INTRO_MS + 500);
     }
 
-    loadFavicon();
     try {
         const r = await fetch(`https://api.github.com/repos/${REPO}/releases`);
         if (r.ok) releases = await r.json();
