@@ -20,7 +20,7 @@
 <meta name="twitter:title" content="Aro, a chaotic font">
 <meta name="twitter:description" content="English letters and symbols, drawn to be unusable in professional places.">
 <meta name="twitter:image" content="https://zynomon.github.io/aro/og.png">
-<link id="favicon" rel="icon" type="image/svg+xml">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 @font-face { font-family: 'Aro'; src: url('./aro.ttf') format('truetype'); font-display: swap; }
 :root { --ink: #fff; --haze: #a8a8a8; --flare: #ffd23f; }
@@ -121,23 +121,22 @@ footer { margin: 80px 0 16px; color: var(--haze); font-size: 16px; display: flex
 let prepareWithSegments = null, layoutWithLines = null;
 async function loadPretext() {
     const urls = [
+        'https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.9/dist/layout.js',
         'https://esm.sh/@chenglou/pretext@0.0.9',
-        'https://esm.sh/@chenglou/pretext',
-        'https://cdn.jsdelivr.net/npm/@chenglou/pretext@0.0.9/dist/layout.js'
+        'https://esm.sh/@chenglou/pretext'
     ];
     for (const u of urls) {
         try {
-            const m = await import(u);
+            const m = await Promise.race([import(u), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 4000))]);
             if (m.prepareWithSegments && m.layoutWithLines) {
                 prepareWithSegments = m.prepareWithSegments;
                 layoutWithLines = m.layoutWithLines;
                 return;
             }
-        } catch (e) {}
+        } catch (e) { console.warn('pretext failed from', u, e); }
     }
 }
 const REPO = 'zynomon/aro';
-const SVG_URL = 'https://raw.githubusercontent.com/zynomon/aro/main/src/en/U%2B0041_A.svg';
 const CMDS = ['git clone https://github.com/zynomon/aro.git', 'cd aro', 'bash build'];
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const INTRO_MS = 1000;
@@ -411,29 +410,6 @@ function showReleases() {
     });
 }
 
-async function loadFavicon() {
-    try {
-        const r = await fetch(SVG_URL);
-        if (!r.ok) return;
-        const doc = new DOMParser().parseFromString(await r.text(), 'image/svg+xml');
-        const d = [...doc.querySelectorAll('path')].map(p => p.getAttribute('d')).filter(Boolean).join(' ');
-        if (!d) return;
-        const ns = 'http://www.w3.org/2000/svg';
-        const probe = document.createElementNS(ns, 'svg');
-        probe.setAttribute('style', 'position:absolute;width:0;height:0;visibility:hidden');
-        const path = document.createElementNS(ns, 'path');
-        path.setAttribute('d', d);
-        probe.appendChild(path);
-        document.body.appendChild(probe);
-        const b = path.getBBox();
-        probe.remove();
-        const m = Math.max(b.width, b.height) * 1.25;
-        const x = b.x + b.width / 2 - m / 2, y = b.y + b.height / 2 - m / 2;
-        const out = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${x} ${y} ${m} ${m}'><rect x='${x}' y='${y}' width='${m}' height='${m}' fill='#000'/><path fill='#fff' fill-rule='evenodd' d='${d}'/></svg>`;
-        document.getElementById('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(out);
-    } catch (e) {}
-}
-
 async function init() {
     try { await document.fonts.load('32px "Aro"'); } catch (e) {}
     const ok = [...document.fonts].some(f => f.family.replace(/["']/g, '') === 'Aro' && f.status === 'loaded');
@@ -505,7 +481,6 @@ async function init() {
         setTimeout(chaos, INTRO_MS + 500);
     }
 
-    loadFavicon();
     try {
         const r = await fetch(`https://api.github.com/repos/${REPO}/releases`);
         if (r.ok) releases = await r.json();
